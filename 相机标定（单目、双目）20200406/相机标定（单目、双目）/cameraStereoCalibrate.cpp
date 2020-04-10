@@ -294,7 +294,7 @@ void onMouse(int event, int x, int y, int flags, void *param)
 void SaveParameters();
 void ReadParameters();
 
-#define IS_CAPTURE 1  //采集图像
+#define IS_CAPTURE 0  //采集图像
 int main()
 {
 #if IS_CAPTURE
@@ -305,6 +305,8 @@ int main()
 	if (!camera.isOpened())
 		return 1;
 	
+	
+
 	while (true)
 	{
 		//grab and retrieve each frames of the video sequentially      
@@ -317,6 +319,8 @@ int main()
 
 		Mat image_l = Mat(frame, rectLeft);
 		Mat image_r = Mat(frame, rectRight);
+		Mat corrImage;
+	//	cv::undistort(image_l, corrImage, cameraMatrix_L, distCoeffs_L);//左相机图像去畸形矫正
 		imshow("left", image_l);
 		imshow("right", image_r);
 
@@ -344,17 +348,18 @@ int main()
 #endif
 
 #if !IS_CAPTURE
-	singleCameraCalibrate(imageList_L, singleCalibrate_result_L, objectPoints_L, corners_seq_L, cameraMatrix_L,
-		distCoeffs_L, imageSize, patternSize, chessboardSize);
-	cout << "已完成左相机的标定!" << endl;
-	singleCameraCalibrate(imageList_R, singleCalibrate_result_R, objectPoints_R, corners_seq_R, cameraMatrix_R,
-		distCoeffs_R, imageSize, patternSize, chessboardSize);
-	cout << "已完成右相机的标定!" << endl;
-	stereoCalibrate(stereoCalibrate_result_L, objectPoints_L, corners_seq_L, corners_seq_R, cameraMatrix_L, distCoeffs_L,
-		cameraMatrix_R, distCoeffs_R, imageSize, R, T, E, F);
-	cout << "相机立体标定完成！" << endl;
 
-	SaveParameters();//保存参数
+	//singleCameraCalibrate(imageList_L, singleCalibrate_result_L, objectPoints_L, corners_seq_L, cameraMatrix_L,
+	//	distCoeffs_L, imageSize, patternSize, chessboardSize);
+	//cout << "已完成左相机的标定!" << endl;
+	//singleCameraCalibrate(imageList_R, singleCalibrate_result_R, objectPoints_R, corners_seq_R, cameraMatrix_R,
+	//	distCoeffs_R, imageSize, patternSize, chessboardSize);
+	//cout << "已完成右相机的标定!" << endl;
+	//stereoCalibrate(stereoCalibrate_result_L, objectPoints_L, corners_seq_L, corners_seq_R, cameraMatrix_L, distCoeffs_L,
+	//	cameraMatrix_R, distCoeffs_R, imageSize, R, T, E, F);
+	//cout << "相机立体标定完成！" << endl;
+
+	//SaveParameters();//保存参数
 
 	ReadParameters();//读取参数
 
@@ -375,82 +380,31 @@ int main()
 
 void SaveParameters()
 {
-	FileStorage fs("cameraMatrix_L.yml", CV_STORAGE_WRITE);
+	cv::FileStorage fs("calibParameter.yml", cv::FileStorage::WRITE);
 	if (fs.isOpened())
 	{
 		fs << "cameraMatrix_L" << cameraMatrix_L;
+		fs << "distCoeffs_L" << distCoeffs_L;
+		fs << "cameraMatrix_R" << cameraMatrix_R;
+		fs << "distCoeffs_R" << distCoeffs_R;
+		fs << "R" << R;
+		fs << "T" << T;
+		fs << "imageSize" << imageSize;
 		fs.release();
-	}
-
-	FileStorage fs2("distCoeffs_L.yml", CV_STORAGE_WRITE);
-	if (fs2.isOpened())
-	{
-		fs2 << "distCoeffs_L" << distCoeffs_L;
-		fs2.release();
-	}
-
-	FileStorage fs3("cameraMatrix_R.yml", CV_STORAGE_WRITE);
-	if (fs3.isOpened())
-	{
-		fs3 << "cameraMatrix_R" << cameraMatrix_R;
-		fs3.release();
-	}
-
-	FileStorage fs4("distCoeffs_R.yml", CV_STORAGE_WRITE);
-	if (fs4.isOpened())
-	{
-		fs4 << "distCoeffs_R" << distCoeffs_R;
-		fs4.release();
-	}
-
-	FileStorage fs5("R.yml", CV_STORAGE_WRITE);
-	if (fs5.isOpened())
-	{
-		fs5 << "R" << R;
-		fs5.release();
-	}
-
-	FileStorage fs6("T.yml", CV_STORAGE_WRITE);
-	if (fs6.isOpened())
-	{
-		fs6 << "T" << T;
-		fs6.release();
-	}
-
-	FileStorage fs7("imageSize.yml", CV_STORAGE_WRITE);
-	if (fs7.isOpened())
-	{
-		fs7 << "imageSize" << imageSize;
-		fs7.release();
 	}
 }
 void ReadParameters()
 {
-	FileStorage fs("cameraMatrix_L.yml", CV_STORAGE_READ);
-	fs["cameraMatrix_L"] >> cameraMatrix_L;
-	fs.release();
-
-	FileStorage fs2("distCoeffs_L.yml", CV_STORAGE_READ);
-	fs2["distCoeffs_L"] >> distCoeffs_L;
-	fs2.release();
-
-	FileStorage fs3("cameraMatrix_R.yml", CV_STORAGE_READ);
-	fs3["cameraMatrix_R"] >> cameraMatrix_R;
-	fs3.release();
-
-	FileStorage fs4("distCoeffs_R.yml", CV_STORAGE_READ);
-	fs4["distCoeffs_R"] >> distCoeffs_R;
-	fs4.release();
-
-	FileStorage fs5("R.yml", CV_STORAGE_READ);
-	fs5["R"] >> R;
-	fs5.release();
-
-	FileStorage fs6("T.yml", CV_STORAGE_READ);
-	fs6["T"] >> T;
-	fs6.release();
-
-	FileStorage fs7("imageSize.yml", CV_STORAGE_READ);
-	fs7["imageSize"] >> imageSize;
-	fs7.release();
+	cv::FileStorage fs("calibParameter.yml", cv::FileStorage::READ);
+	if (fs.isOpened())
+	{
+		fs["cameraMatrix_L"] >> cameraMatrix_L;
+		fs["distCoeffs_L"] >> distCoeffs_L;
+		fs["cameraMatrix_R"] >> cameraMatrix_R;
+		fs["distCoeffs_R"] >> distCoeffs_R;
+		fs["R"] >> R;
+		fs["T"] >> T;
+		fs["imageSize"] >> imageSize;
+		fs.release();
+	}
 }
